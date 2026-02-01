@@ -1,6 +1,8 @@
 import numpy as np
 
-from roboautotask.configs import robot
+from roboautotask.configs.svd import CALIB_R, CALIB_T
+from roboautotask.configs.robot import ROBOT_START_POS
+
 from roboautotask.utils import math
 
 def transform_cam_to_robot(point_cam):
@@ -14,7 +16,7 @@ def transform_cam_to_robot(point_cam):
         p_cam = p_cam.reshape(3)
         
     # Robot = R @ Cam + t
-    point_robot = (robot.CALIB_R @ p_cam) + robot.CALIB_T
+    point_robot = (CALIB_R @ p_cam) + CALIB_T
     return point_robot
 
 def get_target_flange_pose(current_pos, target_obj_pos, offset_x):
@@ -28,7 +30,7 @@ def get_target_flange_pose(current_pos, target_obj_pos, offset_x):
     """
     # 1. 目标点与参考点
     P_target = np.array(target_obj_pos, dtype=np.float64)
-    P_home = np.array(robot.ROBOT_START_POS, dtype=np.float64)
+    P_home = np.array(ROBOT_START_POS, dtype=np.float64)
     
     # 2. 计算接近方向 (X轴)
     vec_approach = P_target - P_home
