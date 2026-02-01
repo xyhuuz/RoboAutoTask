@@ -1,0 +1,36 @@
+# 统一对象池
+items:
+  1:
+    name: "orange"
+    label: "orange"
+    offsets: {x: 0.03, y: 0, z: 0} # ee前3cm处对准物体识别中心
+    gripper_pos: 20        # 抓取时闭合到20
+  -1:
+    name: "book"
+    label: "book"
+    offsets: {x: 0.08, y: 0, z: 0.12} # 放置在书上方10cm，ee前8cm处对准物体识别中心
+    gripper_pos: 100       # 放置时打开到100
+  2:
+    name: "cup"
+    label: "cup"
+    offsets: {x: 0.03, y: 0, z: 0}
+    gripper_pos: 30
+  -2:
+    name: "plate"
+    label: "plate"
+    offsets: {x: 0.08, y: 0, z: 0.08}
+    gripper_pos: 100
+  3:
+    name: "grapes"
+    label: "grapes"
+    offsets: {x: 0.03, y: 0, z: 0} # ee前3cm处对准物体识别中心
+    gripper_pos: 20        # 抓取时闭合到20
+  -3:
+    name: "bin"
+    pos: [0.4, -0.2, 0.2]  # 也可以是固定坐标
+    quat: [0, 0, 0, 1]
+    offsets: {x: 0, y: 0, z: 0.05}
+    gripper_pos: 100
+
+special_actions:
+  0: "home"
