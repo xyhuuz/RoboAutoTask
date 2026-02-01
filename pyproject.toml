@@ -8,12 +8,16 @@ version = "0.0.1"
 description = ""
 readme = "README.md"
 authors = [
+    { name = "Yihao Xu", email = "tdcqxyh@outlook.com" },
     { name = "Xiang Yang", email = "ryu-yang@qq.com" }
 ]
 requires-python = ">=3.10,<4.0"
 dependencies = [
     "logging_mp",
     "playwright",
+    "numpy",
+    "ultralytics",
+    "pyrealsense2",
 ]
 
 [project.optional-dependencies]
