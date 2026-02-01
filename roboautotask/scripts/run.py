@@ -29,7 +29,7 @@ def main():
                        help='登录密码（必填）')
     parser.add_argument('--url', type=str, default='http://localhost:5805/hmi/login',
                        help='登录URL，默认为 http://localhost:5805/hmi/login')
-    parser.add_argument('--headless', action='store_true',
+    parser.add_argument('--headless', action='store_true', default=False,
                        help='以无头模式运行（不显示浏览器窗口）')
     parser.add_argument('--task-wait-timeout', type=int, default=10000,
                        help='等待元素加载的超时时间（毫秒），默认为10000')
