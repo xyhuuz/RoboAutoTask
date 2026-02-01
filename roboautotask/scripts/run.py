@@ -63,6 +63,10 @@ def main():
                     logger.info(f"Sequence aborted at ID {sid}")
                     break
 
+            operator.complete_task()
+            operator.commit_task()
+            operator.quit_task()
+
             time.sleep(10)
 
     finally:
