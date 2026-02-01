@@ -10,7 +10,7 @@ from roboautotask.configs.robot import ROBOT_START_POS, ROBOT_START_ORI
 from roboautotask.utils.pose import load_pose_from_file
 
 
-class TaskExecutor:
+class MotionExecutor:
     def __init__(self, config_path="tasks.yaml"):
         with open(config_path, 'r') as f:
             self.cfg = yaml.safe_load(f)
@@ -29,7 +29,7 @@ class TaskExecutor:
         # 1. 定位：获取物体在基座坐标系下的原始位置
         if 'label' in item:
             cam_point = capture_target_coordinate(item['label'])
-            if cam_point is None: return False 
+            if cam_point is None: return False
             robot_point_raw = transform_cam_to_robot(cam_point)
         else:
             robot_point_raw = np.array(item['pos'], dtype=float)
@@ -64,8 +64,4 @@ class TaskExecutor:
         execute_motion(s_p, s_q, ROBOT_START_POS, ROBOT_START_ORI, 100)
         # robot_driver.set_gripper_position(100)
         return True
-    
-
-
-
     

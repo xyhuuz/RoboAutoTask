@@ -1,9 +1,10 @@
 import sys
 import argparse
 import logging_mp
+import time
 
 from roboautotask.core.operator import Operator
-from roboautotask.core.task import TaskExecutor
+from roboautotask.core.motion import MotionExecutor
 
 from roboautotask.utils.pose import save_pose_to_file
 
@@ -19,8 +20,8 @@ def main():
 
     parser = argparse.ArgumentParser(description='自动化采集任务脚本')
     
-    parser.add_argument('--task', type=str, required=True,
-                       help='任务配置yaml文件路径')
+    parser.add_argument('--motions', type=str, required=True,
+                       help='运动配置yaml文件路径')
     parser.add_argument('--task-id', type=int, required=True,
                        help='任务ID（必填）')
     parser.add_argument('--user', type=str, required=True,
@@ -44,20 +45,30 @@ def main():
 
     save_pose_to_file("./latest_pose.txt", ROBOT_START_POS, ROBOT_START_ORI)
 
-
-    
     operator = Operator(args)
-    task_executor = TaskExecutor("./tasks.yaml")
+    motion_executor = MotionExecutor(args.motions)
 
     operator.login()
 
+    try:
+        while True:
+            operator.find_task()
+            operator.start_task()
 
-    task_sequence = [1, -2, 0]
+            ### 执行任务
+            motion_sequence = [1, -2, 0]
 
-    for sid in task_sequence:
-        if not task_executor.execute_by_id(sid):
-            logger.info(f"Sequence aborted at ID {sid}")
-            break
+            for sid in motion_sequence:
+                if not motion_executor.execute_by_id(sid):
+                    logger.info(f"Sequence aborted at ID {sid}")
+                    break
+
+            time.sleep(10)
+
+    finally:
+        operator.stop()
+        motion_executor.go_home()
+
 
 if __name__ == "__main__":
     main()
