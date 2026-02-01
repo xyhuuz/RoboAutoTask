@@ -19,9 +19,11 @@ class MotionExecutor:
         return load_pose_from_file("latest_pose.txt")
 
     def execute_by_id(self, action_id):
-        if action_id == 0: return self.go_home()
+        if action_id == 0: 
+            return self.go_home()
 
-        if action_id == 1: return self.go_random_pose()
+        if action_id == 1: 
+            return self.go_random_pose()
 
         item = self.cfg['items'].get(action_id)
         if not item: return False
@@ -67,14 +69,13 @@ class MotionExecutor:
         # robot_driver.set_gripper_position(100)
         return True
     
-    def go_random_pose(self, center_item_id = "-3"):
+    def go_random_pose(self, center_item_id = -3):
         rand_pos = []
         s_p, s_q = self._get_current()
 
         item = self.cfg['items'].get(center_item_id)
         if not item: return False
 
-        # 1. 定位：获取物体在基座坐标系下的原始位置
         if 'label' in item:
             cam_point = capture_target_coordinate(item['label'])
             if cam_point is None: return False
