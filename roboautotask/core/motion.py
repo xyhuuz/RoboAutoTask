@@ -8,7 +8,7 @@ from roboautotask.robot.utils import transform_cam_to_robot, get_target_flange_p
 from roboautotask.configs.robot import ROBOT_START_POS, ROBOT_START_ORI
 
 from roboautotask.utils.pose import load_pose_from_file
-
+from roboautotask.utils.math import generate_random_points_around_center
 
 class MotionExecutor:
     def __init__(self, config_path="tasks.yaml"):
@@ -20,6 +20,8 @@ class MotionExecutor:
 
     def execute_by_id(self, action_id):
         if action_id == 0: return self.go_home()
+
+        if action_id == 1: return self.go_random_pose()
 
         item = self.cfg['items'].get(action_id)
         if not item: return False
@@ -64,4 +66,26 @@ class MotionExecutor:
         execute_motion(s_p, s_q, ROBOT_START_POS, ROBOT_START_ORI, 100)
         # robot_driver.set_gripper_position(100)
         return True
+    
+    def go_random_pose(self, center_item_id = "-3"):
+        rand_pos = []
+        s_p, s_q = self._get_current()
+
+        item = self.cfg['items'].get(center_item_id)
+        if not item: return False
+
+        # 1. 定位：获取物体在基座坐标系下的原始位置
+        if 'label' in item:
+            cam_point = capture_target_coordinate(item['label'])
+            if cam_point is None: return False
+            robot_point_raw = transform_cam_to_robot(cam_point)
+
+            rand_pos = generate_random_points_around_center(center_point=robot_point_raw)
+
+        else:
+            return
+
+        final_pos, final_quat = get_target_flange_pose(s_p, rand_pos, offset_x=0)
+        execute_motion(s_p, s_q, final_pos, final_quat, 100)
+        return
     

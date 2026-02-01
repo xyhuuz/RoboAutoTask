@@ -55,8 +55,8 @@ def main():
             operator.find_task()
             operator.start_task()
 
-            ### 执行任务
-            motion_sequence = [1, -2, 0]
+            ### 执行采集任务
+            motion_sequence = [2, -3, 0]
 
             for sid in motion_sequence:
                 if not motion_executor.execute_by_id(sid):
@@ -67,7 +67,19 @@ def main():
             operator.commit_task()
             operator.quit_task()
 
-            time.sleep(10)
+            logger.info("任务采集完成")
+
+            ### 执行场景重置
+            motion_sequence = [2, 1, 0]
+
+            for sid in motion_sequence:
+                if not motion_executor.execute_by_id(sid):
+                    logger.info(f"Sequence aborted at ID {sid}")
+                    break
+            
+            logger.info("场景重置完成")
+
+            time.sleep(3)
 
     finally:
         operator.stop()
