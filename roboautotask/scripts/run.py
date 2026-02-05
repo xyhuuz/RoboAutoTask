@@ -50,36 +50,70 @@ def main():
 
     operator.login()
 
+    # try:
+    #     while True:
+    #         operator.find_task()
+    #         operator.start_task()
+
+    #         ### 执行采集任务
+    #         motion_sequence = [[2, -3]]
+
+    #         for sid in motion_sequence:
+    #             grab_id,place_id = sid
+    #             if not motion_executor.execute_by_id(grab_id,place_id):
+    #                 logger.info(f"Sequence aborted at ID {sid}")
+    #                 break
+
+    #         operator.complete_task()
+    #         operator.commit_task()
+    #         operator.quit_task()
+
+    #         logger.info("任务采集完成")
+
+    #         ### 执行场景重置
+    #         # motion_sequence = [2, 1, 0]
+
+    #         for sid in motion_sequence:
+    #             grab_id,place_id = sid
+    #             if not motion_executor.reset(grab_id,place_id):
+    #                 logger.info(f"Sequence aborted at reset")
+    #                 break
+            
+    #         logger.info("场景重置完成")
+
+    #         time.sleep(3)
     try:
         while True:
-            operator.find_task()
-            operator.start_task()
-
             ### 执行采集任务
-            motion_sequence = [2, -3, 0]
+            motion_sequence = [[2, -3]]
 
             for sid in motion_sequence:
-                if not motion_executor.execute_by_id(sid):
+                grab_id,place_id = sid
+
+                operator.find_task()
+                operator.start_task()
+
+
+                if not motion_executor.execute_by_id(grab_id,place_id):
                     logger.info(f"Sequence aborted at ID {sid}")
                     break
 
-            operator.complete_task()
-            operator.commit_task()
-            operator.quit_task()
+                operator.complete_task()
+                operator.commit_task()
+                operator.quit_task()
 
-            logger.info("任务采集完成")
+                logger.info("任务采集完成")
 
-            ### 执行场景重置
-            # motion_sequence = [2, 1, 0]
+                ### 执行场景重置
+                # motion_sequence = [2, 1, 0]
 
-            # for sid in motion_sequence:
-            if not motion_executor.reset(2,-3):
-                logger.info(f"Sequence aborted at reset")
-                    # break
-            
-            logger.info("场景重置完成")
+                if not motion_executor.reset(grab_id,place_id):
+                    logger.info(f"Sequence aborted at reset")
+                    break
+                
+                logger.info("场景重置完成")
 
-            time.sleep(3)
+                time.sleep(3)
 
     finally:
         operator.stop()
