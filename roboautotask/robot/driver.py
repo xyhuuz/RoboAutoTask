@@ -8,6 +8,7 @@ from geometry_msgs.msg import PoseStamped, Quaternion, Point
 from sensor_msgs.msg import JointState
 
 from roboautotask.configs import topic
+from roboautotask.configs import robot
 
 from roboautotask.utils.math import quaternion_slerp
 from roboautotask.utils.pose import save_pose_to_file
@@ -182,6 +183,78 @@ class InterpolationDriver(Node):
             raise SystemExit
 
 
+class getCurrPoseDriver(Node):
+    def __init__(self):
+        super().__init__('RoboAutoTask_getCurrPose_Driver')
+
+        # ---create subscriber--
+        self.left_ee_subscription = self.create_subscription(
+            PoseStamped, topic.LEFT_EE_SUB, self.left_ee_sub_callback, 10
+        )
+        self.left_gripper_subscription = self.create_subscription(
+            JointState, topic.LEFT_GRIPPER_SUB, self.left_gripper_sub_callback, 10
+        )
+
+        # ---parameter
+
+        self.cb_idx = 0
+        self.target_count = 3  # 设定的采样次数
+        self.pos_list = []  # 存储 [x, y, z]
+        self.ori_list = []  # 存储 [x, y, z, w]
+        self.current_gripper = 100.0
+
+    def left_ee_sub_callback(self,msg):
+        # 1. 防止空值或异常判断
+        if msg.pose is None:
+            # self.get_logger().warn("接收到空的 Pose 数据，跳过本次采样")
+            return
+
+        # 2. 提取数据并存入列表
+        p = msg.pose.position
+        o = msg.pose.orientation
+        
+        # 检查坐标是否包含有效数值（防止某些驱动初始化发出的全0或NaN数据）
+        if not all(map(lambda v: isinstance(v, float), [p.x, p.y, p.z])):
+            return
+
+        self.pos_list.append([p.x, p.y, p.z])
+        self.ori_list.append([o.x, o.y, o.z, o.w])
+        
+        self.cb_idx += 1
+        # self.get_logger().info(f"已收集数据: {self.cb_idx}/{self.target_count}")
+
+        # 3. 达到次数后计算平均值并退出
+        if self.cb_idx >= self.target_count:
+            self.calculate_and_finish()
+
+
+    def left_gripper_sub_callback(self,msg):
+        # 假设 msg.position 是一个列表，取第一个值
+        if len(msg.position) > 0:
+            self.current_gripper = msg.position[0]
+
+    def calculate_and_finish(self):
+        # 将列表转换为 NumPy 数组方便按列求平均
+        avg_pos = np.mean(self.pos_list, axis=0)
+        avg_ori = np.mean(self.ori_list, axis=0)
+        
+        # 注意：四元数简单求平均在严格数学上是不准确的（应使用SLERP或归一化），
+        # 但如果姿态波动极小，简单平均+归一化是常见的工程简化方案。
+        avg_ori = avg_ori / np.linalg.norm(avg_ori) 
+
+        # self.get_logger().info(f"--- 采样完成 ---")
+        # self.get_logger().info(f"平均位置: {avg_pos}")
+        # self.get_logger().info(f"平均姿态: {avg_ori}")
+
+        # 保存文件
+        save_pose_to_file('latest_pose.txt', avg_pos, avg_ori)
+        
+        # 触发节点销毁和程序退出
+        raise SystemExit
+
+
+
+
 def execute_motion(start_pos, start_quat, target_pos, target_quat, gripper_pos):
     """
     外部调用接口
@@ -208,3 +281,23 @@ def set_gripper_position(position, side='left'):
     # 因为不需要单独的类控制夹爪，目前废弃
     print("Warning: set_gripper_position is deprecated. Use execute_motion for synchronized control.")
     pass
+
+
+def MeasureCurrPose():
+    """
+    外部调用接口
+    """
+    rclpy.init()
+    
+    # 创建节点并运行
+    node = getCurrPoseDriver()
+
+    try:
+        rclpy.spin(node)
+    except SystemExit:
+        pass
+    finally:
+        node.destroy_node()
+        # 检查是否还有其他节点在使用 rclpy，如果没有则 shutdown
+        if rclpy.ok():
+            rclpy.shutdown()
