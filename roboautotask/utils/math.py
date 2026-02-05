@@ -38,6 +38,99 @@ def matrix_to_quaternion(rot_mat):
     
     return np.array([x, y, z, w])
 
+def pose_to_matrix(pos, quat):
+    """
+    将位置(x,y,z)和四元数(x,y,z,w)转换为4x4变换矩阵
+    """
+    qx, qy, qz, qw = quat
+    # 计算旋转矩阵的各项分量
+    # 这里的数学公式是经典的四元数转旋转矩阵公式
+    r00 = 1 - 2 * (qy**2 + qz**2)
+    r01 = 2 * (qx*qy - qz*qw)
+    r02 = 2 * (qx*qz + qy*qw)
+    
+    r10 = 2 * (qx*qy + qz*qw)
+    r11 = 1 - 2 * (qx**2 + qz**2)
+    r12 = 2 * (qy*qz - qx*qw)
+    
+    r20 = 2 * (qx*qz - qy*qw)
+    r21 = 2 * (qy*qz + qx*qw)
+    r22 = 1 - 2 * (qx**2 + qy**2)
+    
+    # 组装成 4x4 矩阵
+    matrix = np.array([
+        [r00, r01, r02, pos[0]],
+        [r10, r11, r12, pos[1]],
+        [r20, r21, r22, pos[2]],
+        [0,   0,   0,   1]
+    ])
+    return matrix
+
+def matrix_to_pose(matrix):
+    """
+    将4x4变换矩阵拆解为位置(x,y,z)和四元数(x,y,z,w)
+    """
+    # 提取位置
+    pos = matrix[:3, 3]
+    
+    # 提取旋转矩阵并计算四元数 (Shepperd's Algorithm 简化版)
+    r = matrix[:3, :3]
+    tr = np.trace(r)
+    
+    if tr > 0:
+        s = 0.5 / np.sqrt(tr + 1.0)
+        qw = 0.25 / s
+        qx = (r[2, 1] - r[1, 2]) * s
+        qy = (r[0, 2] - r[2, 0]) * s
+        qz = (r[1, 0] - r[0, 1]) * s
+    else:
+        # 如果轨迹小于等于0，需要找对角线最大的元素
+        if r[0, 0] > r[1, 1] and r[0, 0] > r[2, 2]:
+            s = 2.0 * np.sqrt(1.0 + r[0, 0] - r[1, 1] - r[2, 2])
+            qw = (r[2, 1] - r[1, 2]) / s
+            qx = 0.25 * s
+            qy = (r[0, 1] + r[1, 0]) / s
+            qz = (r[0, 2] + r[2, 0]) / s
+        elif r[1, 1] > r[2, 2]:
+            s = 2.0 * np.sqrt(1.0 + r[1, 1] - r[0, 0] - r[2, 2])
+            qw = (r[0, 2] - r[2, 0]) / s
+            qx = (r[0, 1] + r[1, 0]) / s
+            qy = 0.25 * s
+            qz = (r[1, 2] + r[2, 1]) / s
+        else:
+            s = 2.0 * np.sqrt(1.0 + r[2, 2] - r[0, 0] - r[1, 1])
+            qw = (r[1, 0] - r[0, 1]) / s
+            qx = (r[0, 2] + r[2, 0]) / s
+            qy = (r[1, 2] + r[2, 1]) / s
+            qz = 0.25 * s
+            
+    return pos, np.array([qx, qy, qz, qw])
+
+def invert_rt(R: np.ndarray, t: np.ndarray) -> tuple[np.ndarray, np.ndarray]:
+    """
+    输入R, t求逆
+    Parameters
+    ----------
+    R : (3,3) array_like   rotation matrix
+    t : (3,)  or (3,1) array_like   translation vector
+
+    Returns
+    -------
+    R_inv : (3,3) ndarray   inverse rotation (= R.T)
+    t_inv : (3,)  ndarray   inverse translation (= -R.T @ t)
+    """
+    R = np.asarray(R, dtype=float)
+    t = np.asarray(t, dtype=float).reshape(3)
+
+    if R.shape != (3, 3):
+        raise ValueError("R must be 3×3")
+    if not np.allclose(R @ R.T, np.eye(3), atol=1e-6):
+        raise ValueError("R is not a valid rotation matrix")
+
+    R_inv = R.T                       # 旋转矩阵正交：逆=转置
+    t_inv = -R_inv @ t                # 公式推导见下方
+    return R_inv, t_inv
+
 # ================= 辅助函数 =================
 def quaternion_slerp(q0, q1, t):
     """ 四元数球面线性插值 """
