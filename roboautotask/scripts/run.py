@@ -56,11 +56,10 @@ def main():
     #         operator.start_task()
 
     #         ### 执行采集任务
-    #         motion_sequence = [[2, -3]]
+    #         motion_sequence = [2, -3, 0]
 
     #         for sid in motion_sequence:
-    #             grab_id,place_id = sid
-    #             if not motion_executor.execute_by_id(grab_id,place_id):
+    #             if not motion_executor.execute_by_id(sid):
     #                 logger.info(f"Sequence aborted at ID {sid}")
     #                 break
 
@@ -74,8 +73,7 @@ def main():
     #         # motion_sequence = [2, 1, 0]
 
     #         for sid in motion_sequence:
-    #             grab_id,place_id = sid
-    #             if not motion_executor.reset(grab_id,place_id):
+    #             if not motion_executor.reset(sid):
     #                 logger.info(f"Sequence aborted at reset")
     #                 break
             
@@ -87,6 +85,7 @@ def main():
             ### 执行采集任务
             motion_sequence = [[2, -3]]
 
+            # 这是抓取&放置一套流程；抓取物&放置物并发识别；
             for sid in motion_sequence:
                 grab_id,place_id = sid
 

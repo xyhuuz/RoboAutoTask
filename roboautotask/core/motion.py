@@ -24,12 +24,6 @@ class MotionExecutor:
         return load_pose_from_file("latest_pose.txt")
 
     def execute_by_id(self, grab_id,place_id):
-        # if action_id == 0: 
-        #     return self.go_home()
-
-        # if action_id == 1: 
-        #     return self.go_random_pose()
-
         grab_item = self.cfg['items'].get(grab_id)
         place_item = self.cfg['items'].get(place_id)
         if (not grab_item) or (not place_item): return False
