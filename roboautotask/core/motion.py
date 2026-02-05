@@ -87,6 +87,9 @@ class MotionExecutor:
             robot_point_raw = transform_cam_to_robot(cam_point)
 
             rand_pos = generate_random_points_around_center(center_point=robot_point_raw.tolist())[0]
+            # 从yaml获取盘子的zoffset，避免放置平面高度过低
+            z_offset = item.get('offsets', {}).get('z', 0)
+            rand_pos[2] += z_offset
 
         else:
             return False
