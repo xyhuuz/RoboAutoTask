@@ -118,7 +118,8 @@ def calibrate(cfg: ControlPipelineConfig):
                 center_rs = np.mean(points_3d, axis=0)
                 x, y, z = center_rs[2], -center_rs[0], -center_rs[1]
                 detector.latest_centers[id] = (x, y, z)
-                detector.update_view_image()
+                
+            detector.update_view_image()
             
             img = detector.get_view_image()
 

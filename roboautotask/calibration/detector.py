@@ -46,11 +46,11 @@ class ArucoDetector():
         
     def update_view_image(self):
         display = self.latest_view
-        for id, marker in self.latest_markers.items():
+        for id, center in self.latest_centers.items():
             # 在图片显示mark点xyz
-            cx = int(np.mean(marker[:, 0]))
-            cy = int(np.mean(marker[:, 1]))
-            x, y, z = self.latest_centers[id]
+            cx = int(np.mean(self.latest_markers[id][:, 0]))
+            cy = int(np.mean(self.latest_markers[id][:, 1]))
+            x, y, z = center
             txt = f'Mark ID {id}: {x:.2f}, {y:.2f}, {z:.2f}'
             (w, h), _ = cv2.getTextSize(txt, cv2.FONT_HERSHEY_SIMPLEX, 0.5, 2)
             cv2.rectangle(display, (cx-5, cy-25), (cx+w+5, cy), (0, 0, 0), -1)
