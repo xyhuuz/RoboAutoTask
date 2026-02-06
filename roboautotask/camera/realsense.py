@@ -163,7 +163,7 @@ class RealsenseCameraClientNode(Node):
                 self.color_info = msg
                 self.color_intrinsics = self.extract_intrinsics_from_msg(msg)
                 
-                logger.info(f"Color camera intrinsics received: "
+                logger.debug(f"Color camera intrinsics received: "
                                       f"fx={self.color_intrinsics['fx']:.2f}, "
                                       f"fy={self.color_intrinsics['fy']:.2f}")
                 
@@ -177,7 +177,7 @@ class RealsenseCameraClientNode(Node):
                 self.depth_info = msg
                 self.depth_intrinsics = self.extract_intrinsics_from_msg(msg)
                 
-                logger.info(f"Depth camera intrinsics received: "
+                logger.debug(f"Depth camera intrinsics received: "
                                       f"fx={self.depth_intrinsics['fx']:.2f}, "
                                       f"fy={self.depth_intrinsics['fy']:.2f}")
                 

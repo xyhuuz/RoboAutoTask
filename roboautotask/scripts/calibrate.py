@@ -88,7 +88,7 @@ def calibrate(cfg: ControlPipelineConfig):
         while True:
             stat_time = time.perf_counter()
             obs = robot.get_observation()
-            arm_pos, arm_ori = get_pose_from_observation(obs)
+            arm_pos, arm_ori = get_pose_from_observation(obs, "left")
             
             detector.detect(camera_node.color_image)
             for id, marker in detector.latest_markers.items():
