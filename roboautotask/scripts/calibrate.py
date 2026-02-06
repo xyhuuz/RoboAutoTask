@@ -36,12 +36,10 @@ class ControlPipelineConfig:
     robot: RobotConfig
 
 @parser.wrap()
-def main(cfg: ControlPipelineConfig):
+def calibrate(cfg: ControlPipelineConfig):
     logger.info(pformat(asdict(cfg)))
 
-    register_third_party_devices()
-    logger.info(f"Registered robot types: {list(RobotConfig._choice_registry.keys())}")
-
+    ros2_node_manager = ROS2_NodeManager()
 
     try:
         robot: Robot = make_robot_from_config(cfg.robot)
@@ -61,7 +59,7 @@ def main(cfg: ControlPipelineConfig):
     calibrator = Calibrator(csv_path)
     detector = ArucoDetector()
 
-    ros2_node_manager = ROS2_NodeManager()
+    
     camera_node = RealsenseCameraClientNode(
         color_topic=CAMERA_COLOR_SUB_TOPIC,
         depth_topic=CAMERA_DEPTH_SUB_TOPIC,
@@ -146,6 +144,12 @@ def main(cfg: ControlPipelineConfig):
         cv2.destroyWindow(win)
         ros2_node_manager.stop()
         logger.info(f'\nAll data saved -> {csv_path.absolute()}')
+
+
+def main():
+    register_third_party_devices()
+    logger.info(f"Registered robot types: {list(RobotConfig._choice_registry.keys())}")
+    calibrate()
 
 
 if __name__ == '__main__':
