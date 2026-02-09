@@ -98,6 +98,8 @@ def main():
                     break
                 elif result == 2:
                     logger.info('无法采集，需要重置！')
+                elif result == 3:
+                    logger.info('运动时间超时，需要检查目标物位置！')
 
                 operator.complete_task()
                 operator.commit_task()
