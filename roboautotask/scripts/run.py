@@ -1,7 +1,9 @@
 import sys
+import cv2
 import argparse
 import logging_mp
 import time
+import numpy as np
 
 from roboautotask.core.operator import Operator
 from roboautotask.core.motion import MotionExecutor
@@ -112,7 +114,37 @@ def main():
                     operator.destroy_task()
                     operator.quit_task()
                     # 加按键等待
-                    raise SystemExit
+                    # --- 新增：CV2 按键等待功能 ---
+                    # 创建一个黑色的画布
+                    img = np.zeros((400, 800, 3), np.uint8)
+                    # 添加提示文字
+                    font = cv2.FONT_HERSHEY_SIMPLEX
+                    cv2.putText(img, 'TIMEOUT: Check object position!', (50, 150), font, 1, (0, 0, 255), 2, cv2.LINE_AA)
+                    cv2.putText(img, 'Press [C] to Continue / [ESC] to Quit', (50, 250), font, 1, (255, 255, 255), 2, cv2.LINE_AA)
+                    
+                    cv2.namedWindow('Robot_Alert', cv2.WINDOW_AUTOSIZE)
+                    cv2.imshow('Robot_Alert', img)
+                    
+                    logger.info("等待用户按键反馈...")
+                    
+                    while True:
+                        # 等待按键输入，1ms检查一次
+                        key = cv2.waitKey(1) & 0xFF
+                        
+                        # 如果按下 'c' 或 'C'
+                        if key == ord('c') or key == ord('C'):
+                            logger.info("用户按下 C，准备重新开始循环...")
+                            cv2.destroyWindow('Robot_Alert')
+                            break # 跳出当前的 key 等待循环
+                        
+                        # 如果按下 ESC
+                        elif key == 27:
+                            logger.info("用户按下 ESC，终止任务")
+                            cv2.destroyWindow('Robot_Alert')
+                            raise SystemExit # 直接退出程序
+
+                    # continue 将会跳过本次 while True 的剩余逻辑，进入下一次任务循环
+                    continue
 
 
 
