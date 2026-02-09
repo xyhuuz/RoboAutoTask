@@ -159,8 +159,8 @@ def quaternion_slerp(q0, q1, t):
 
 def generate_random_points_around_center(
     center_point: List[float],  # 输入的中心点 [x, y, z]
-    rectangle_width: float = 0.3,  # 矩形区域宽度（x方向）
-    rectangle_length: float = 0.3,  # 矩形区域长度（y方向）
+    rectangle_width: float = 0.19,  # 矩形区域宽度（x方向）
+    rectangle_length: float = 0.4,  # 矩形区域长度（y方向）
     rectangle_height: float = 0.01,   # 矩形区域高度（z方向）
     exclusion_radius: float = 0.095,   # 排除圆的半径
     num_points: int = 1,           # 要生成的点的数量
@@ -213,8 +213,9 @@ def generate_random_points_around_center(
         max_distance = np.sqrt((rectangle_width/2)**2 + (rectangle_length/2)**2)
         normalized_distance = xy_distance / max_distance
         
-        # 接受概率随距离增加而减少，使用幂函数控制
-        acceptance_prob = (1 - normalized_distance) ** distribution_power
+        # 接受概率随距离增加而增加，使用幂函数控制
+        # acceptance_prob = (1 - normalized_distance) ** distribution_power
+        acceptance_prob = normalized_distance ** distribution_power
         
         # 随机决定是否接受这个点
         if np.random.random() < acceptance_prob:
@@ -222,3 +223,26 @@ def generate_random_points_around_center(
             points_generated += 1
     
     return np.array(all_points)
+
+
+def obj_is_in_placement(point,center,width,height):
+    """
+    判断点是否在矩形内
+    :param point: (x1, y1)
+    :param center: (xc, yc) 矩形中心
+    :param width: 宽度
+    :param height: 高度
+    :return: Boolean
+    """
+    x1, y1, z1 = point
+    xc, yc, zc = center
+    
+    # 计算水平和垂直方向的半长
+    half_w = width / 2
+    half_h = height / 2
+    
+    # 检查 x 和 y 是否都在边界范围内
+    in_x = xc - half_w <= x1 <= xc + half_w
+    in_y = yc - half_h <= y1 <= yc + half_h
+    
+    return in_x and in_y
