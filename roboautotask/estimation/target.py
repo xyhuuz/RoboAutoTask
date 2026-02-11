@@ -99,7 +99,7 @@ class TargetDetection():
         return self.get_3d_pts(color_x, color_y)
     
     
-    def capture_target_coordinate(self, target_class, camera=None, timeout=30.0):
+    def capture_target_coordinate(self, target_class, camera=None, timeout=60.0):
         """
         阻塞式获取目标坐标（按需检测版本）
         

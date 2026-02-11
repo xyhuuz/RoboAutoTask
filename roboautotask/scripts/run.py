@@ -53,63 +53,41 @@ async def record(daemon, stop_event):
     """后台异步任务：从队列消费图像并发送"""
 
     coordinator = Coordinator(daemon, None)
-    coordinator.start()
+    await coordinator.start()
     coordinator.stream_info(daemon.cameras_info)
     await coordinator.update_stream_info_to_server()
 
-    while not stop_event.is_set():
-        daemon.update()
-        observation = daemon.get_observation()
-        tasks = []
-        if observation is not None:
-            for key in observation:
-                if "image" in key and "depth" not in key:
-                    img = cv2.cvtColor(observation[key], cv2.COLOR_RGB2BGR)
-                    tasks.append(coordinator.update_stream_async(key, img))
+    try:
+        while not stop_event.is_set():
+            daemon.update()
+            observation = daemon.get_observation()
+            tasks = []
+            if observation is not None:
+                for key in observation:
+                    if "image" in key and "depth" not in key:
+                        img = cv2.cvtColor(observation[key], cv2.COLOR_RGB2BGR)
+                        tasks.append(coordinator.update_stream_async(key, img))
 
-        if tasks:
-            try:
-                await asyncio.wait_for(
-                    asyncio.gather(*tasks, return_exceptions=True), timeout=0.2
-                )
-            except asyncio.TimeoutError:
-                pass
+            if tasks:
+                try:
+                    await asyncio.wait_for(
+                        asyncio.gather(*tasks, return_exceptions=True), timeout=0.2
+                    )
+                except asyncio.TimeoutError:
+                    pass
 
-        
-        else:
-            logger.warning("observation is none")
-        
-        # cv2.waitKey(1)
-        await asyncio.sleep(0)
+            
+            else:
+                logger.warning("observation is none")
+            
+            # cv2.waitKey(1)
+            await asyncio.sleep(0)
+    finally:
+        await coordinator.stop()
 
 
 @parser.wrap()
 def run(cfg: ControlPipelineConfig):
-    # # 解析命令行参数
-    # parser = argparse.ArgumentParser(description='自动化采集任务脚本')
-    
-    # parser.add_argument('--motions', type=str, required=True,
-    #                    help='运动配置yaml文件路径')
-    # parser.add_argument('--task-id', type=int, required=True,
-    #                    help='任务ID（必填）')
-    # parser.add_argument('--user', type=str, required=True,
-    #                    help='登录账号（必填）')
-    # parser.add_argument('--password', type=str, required=True,
-    #                    help='登录密码（必填）')
-    # parser.add_argument('--url', type=str, default='http://localhost:5805/hmi/login',
-    #                    help='登录URL，默认为 http://localhost:5805/hmi/login')
-    # parser.add_argument('--headless', action='store_true', default=False,
-    #                    help='以无头模式运行（不显示浏览器窗口）')
-    # parser.add_argument('--task-wait-timeout', type=int, default=10000,
-    #                    help='等待元素加载的超时时间（毫秒），默认为10000')
-    # args = parser.parse_args()
-    
-    # logger.info(f"启动参数:")
-    # logger.info(f"  任务ID: {args.task_id}")
-    # logger.info(f"  用户名: {args.user}")
-    # logger.info(f"  登录URL: {args.url}")
-    # logger.info(f"  无头模式: {'是' if args.headless else '否'}")
-
     logger.info(pformat(asdict(cfg)))
 
     ros2_node_manager = ROS2_NodeManager()
@@ -147,29 +125,24 @@ def run(cfg: ControlPipelineConfig):
     daemon.start()
     target_detection = TargetDetection()
 
-
-    operator = Operator(cfg.operator)
-    motion_executor = MotionExecutor(cfg.motion, daemon, camera_node, target_detection)
-
-    operator.login()
-
     # ===== 新增：创建线程安全队列和停止事件 =====
     # observation_queue = queue.Queue(maxsize=1)  # 只保留最新帧
     stop_event = threading.Event()
 
     # ===== 启动后台 record 线程 =====
     def run_record():
-        # loop = asyncio.new_event_loop()
-        # asyncio.set_event_loop(loop)
-        # try:
-        #     loop.run_until_complete(record(daemon, coordinator, stop_event))
-        # finally:
-        #     loop.close()
         asyncio.run(record(daemon, stop_event))
 
     record_thread = threading.Thread(target=run_record, daemon=True, name="RecordThread")
     record_thread.start()
     logger.info("Started background record thread")
+
+    operator = Operator(cfg.operator)
+    motion_executor = MotionExecutor(cfg.motion, daemon, camera_node, target_detection)
+
+    operator.login()
+
+
 
     try:
         while True:
@@ -257,6 +230,8 @@ def run(cfg: ControlPipelineConfig):
     finally:
         operator.stop()
         motion_executor.go_home()
+        if ros2_node_manager is not None:
+            ros2_node_manager.stop()
 
 
 def main():
